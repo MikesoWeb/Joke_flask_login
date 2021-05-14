@@ -86,3 +86,28 @@ width: 100px;
 height: 100px;
 }
 
+.flash{
+margin: 0 auto;
+width:60%;
+padding: 5px 0;
+margin-bottom:10px;
+text-align: center;
+color: black;
+}
+
+
+.success{
+background-color: green;
+color: white;
+
+}
+
+.attention{
+background-color: yellow;
+color: black;
+}
+
+.error{
+background-color: red;
+
+}

@@ -1,41 +1,74 @@
 import os, random
-from flask import Flask, render_template, request, redirect, url_for
-
-app = Flask(__name__)
-
-login_ = 'mike'
-password_ = '12345'
+from flask import Flask, render_template, request, redirect, url_for, session, g, flash
 
 all_user_foto = ['static/img/' + i for i in os.listdir('static/img') if i != 'user_foto.jpg']
 
 
-@app.route('/')
-@app.route('/login_page')
-def login_page():
+class User:
+    def __init__(self, id, username, password):
+        self.id = id
+        self.username = username
+        self.password = password
+
+    def __repr__(self):
+        return f'<User: {self.username}>'
+
+
+users = [User(id=1, username='Anthony', password='password'), User(id=2, username='Becca', password='secret'),
+         User(id=3, username='Mike', password='12345')]
+print(users)
+app = Flask(__name__)
+app.secret_key = 'sytytuome6547rdytsgjecfuhcgjfretkeyyvhfhutfufthaxfytfgo46gnfhglyishour65edyjldknhfgtow'
+
+
+@app.before_request
+def before_request():
+    g.user = None
+
+    if 'user_id' in session:
+        user = [x for x in users if x.id == session['user_id']][0]
+        g.user = user
+        # print(g.user)
+
+
+@app.route('/', methods=['GET', 'POST'])
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    if request.method == 'POST':
+        session.pop('user_id', None)
+
+        username = request.form['username']
+        password = request.form['password']
+        try:
+            user = [x for x in users if x.username == username][0]
+            print(user)
+
+            if user.username == username and user.password == password:
+                session['user_id'] = user.id
+                print(user.username)
+                return redirect(url_for('profile'))
+            flash('пароль не верный!', category='attention')
+
+        except IndexError:
+            flash('Пользователь не найден!', category='error')
+
+            print('It`s wrong!')
+
     return render_template('login.html')
 
 
-@app.route('/user_page', methods=['post'])
-def login():
-    if request.method == 'POST':
-        login = request.form['login']
-        password = request.form['password']
-
-        if login_ == login and password == password_:
-            status = '__online__'
-            random.shuffle(all_user_foto)
-            random_status = {}
-            for i in range(random.randint(1, 8)):
-                random_status[i] = random.choice(all_user_foto)
-            return render_template('welcome.html', login=login, status=status, all_user_foto=all_user_foto,
-                                   random_status=random_status)
-        return redirect(url_for('login_page'))
-
-
-@app.route('/exit', methods=['get'])
-def exit_log():
-    return redirect(url_for('login_page'))
+@app.route('/profile')
+def profile():
+    if not g.user:
+        return redirect(url_for('login'))
+    status = '__online__'
+    random.shuffle(all_user_foto)
+    random_status = {}
+    for i in range(random.randint(1, 8)):
+        random_status[i] = random.choice(all_user_foto)
+    return render_template('profile.html', status=status, all_user_foto=all_user_foto,
+                           random_status=random_status)
 
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(debug=True, port=8000)
