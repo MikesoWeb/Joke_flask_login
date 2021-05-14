@@ -1,5 +1,6 @@
 import os, random
 from flask import Flask, render_template, request, redirect, url_for, session, g, flash
+from config_one import *
 
 all_user_foto = ['static/img/' + i for i in os.listdir('static/img') if i != 'user_foto.jpg']
 
@@ -18,7 +19,7 @@ users = [User(id=1, username='Anthony', password='password'), User(id=2, usernam
          User(id=3, username='Mike', password='12345')]
 print(users)
 app = Flask(__name__)
-app.secret_key = 'sytytuome6547rdytsgjecfuhcgjfretkeyyvhfhutfufthaxfytfgo46gnfhglyishour65edyjldknhfgtow'
+app.config.from_object(__name__)
 
 
 @app.before_request
@@ -35,19 +36,16 @@ def before_request():
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
-        session.pop('user_id', None)
-
         username = request.form['username']
         password = request.form['password']
         try:
             user = [x for x in users if x.username == username][0]
             print(user)
-
             if user.username == username and user.password == password:
                 session['user_id'] = user.id
                 print(user.username)
                 return redirect(url_for('profile'))
-            flash('пароль не верный!', category='attention')
+            flash('Пароль не верный!', category='attention')
 
         except IndexError:
             flash('Пользователь не найден!', category='error')
@@ -68,6 +66,12 @@ def profile():
         random_status[i] = random.choice(all_user_foto)
     return render_template('profile.html', status=status, all_user_foto=all_user_foto,
                            random_status=random_status)
+
+
+@app.route('/logout')
+def logout():
+    session.pop('user_id', None)
+    return redirect(url_for('login'))
 
 
 if __name__ == '__main__':
